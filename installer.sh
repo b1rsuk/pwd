@@ -3,29 +3,28 @@
 set -e
 
 echo "Updating system..."
-sudo apt update -y
+sudo apt update && sudo apt upgrade -y
 
-echo "Installing snapd if not installed..."
-sudo apt install -y snapd
+echo "Installing required base packages..."
+sudo apt install -y git curl wget gpg apt-transport-https software-properties-common
 
-echo "Refreshing snap..."
-sudo snap install core
-sudo snap refresh core
+echo "Installing Visual Studio Code..."
 
-echo "Installing Git via snap..."
-sudo snap install git --classic
+# Import Microsoft GPG key
+wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg
+sudo install -o root -g root -m 644 microsoft.gpg /usr/share/keyrings/
+rm microsoft.gpg
 
-echo "Installing Visual Studio Code via snap..."
-sudo snap install code --classic
+# Add VS Code repository
+echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft.gpg] https://packages.microsoft.com/repos/code stable main" | \
+sudo tee /etc/apt/sources.list.d/vscode.list > /dev/null
 
-echo "Installing Docker via snap..."
-sudo snap install docker
-
-echo "Adding current user to docker group..."
-sudo usermod -aG docker $USER
-
-echo "Enabling Docker service..."
-sudo snap start docker
+# Install VS Code
+sudo apt update
+sudo apt install -y code
 
 echo "Installation complete."
-echo "Please log out and log back in for Docker permissions to apply."
+echo "Checking versions..."
+
+git --version
+code --version
